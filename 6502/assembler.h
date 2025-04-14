@@ -42,10 +42,13 @@ private:
     std::map<AddressingMode, uint8_t> staOpcodes;
     std::map<AddressingMode, uint8_t> stxOpcodes;
     std::map<AddressingMode, uint8_t> styOpcodes;
+	std::map<AddressingMode, uint8_t> decOpcodes;
+	std::map<AddressingMode, uint8_t> incOpcodes;
 
     AddressingMode detectAddressingMode(const std::string& operand);
     uint16_t parseOperand(const std::string& operand);
     void assembleInstructionWithOperand(const std::string& operand, const std::map<AddressingMode, uint8_t>& opcodeMap);
 
     InstructionHandler makeGenericHandler(const std::map<AddressingMode, uint8_t>& opcodeMap);
+    assembler::InstructionHandler makeInstructionHandlerForSingleByte(uint8_t opcode);
 };

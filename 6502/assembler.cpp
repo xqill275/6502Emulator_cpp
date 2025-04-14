@@ -55,6 +55,21 @@ assembler::assembler() {
     {AddressingMode::Absolute,  0x8c}
     };
 
+	// stack instructions
+	decOpcodes = {
+        {AddressingMode::ZeroPage, 0xC6 },
+	    {AddressingMode::ZeroPageX, 0xD6 },
+	    {AddressingMode::Absolute, 0xCE },
+	    {AddressingMode::AbsoluteX, 0xDE }
+    };
+
+	incOpcodes = {
+		{AddressingMode::ZeroPage, 0xE6 },
+		{AddressingMode::ZeroPageX, 0xF6 },
+		{AddressingMode::Absolute, 0xEE },
+		{AddressingMode::AbsoluteX, 0xFE }
+	};
+
 
     // Register instruction handlers
     instructionHandlers["LDA"] = makeGenericHandler(ldaOpcodes);
@@ -63,42 +78,29 @@ assembler::assembler() {
     instructionHandlers["STA"] = makeGenericHandler(staOpcodes);
     instructionHandlers["STX"] = makeGenericHandler(stxOpcodes);
     instructionHandlers["STY"] = makeGenericHandler(styOpcodes);
+	instructionHandlers["DEC"] = makeGenericHandler(decOpcodes);
+	instructionHandlers["INC"] = makeGenericHandler(incOpcodes);
 
 
-    instructionHandlers["TAX"] = [&](size_t& i) {
-        assembledProgram.push_back(0xAA);
-        programSize += 1;
-        };
 
-    instructionHandlers["TAY"] = [&](size_t& i) {
-        assembledProgram.push_back(0xA8);
-        programSize += 1;
-        };
+	instructionHandlers["TAX"] = makeInstructionHandlerForSingleByte(0xAA);
+	instructionHandlers["TAY"] = makeInstructionHandlerForSingleByte(0xA8);
+	instructionHandlers["TSX"] = makeInstructionHandlerForSingleByte(0xBA);
+	instructionHandlers["TXA"] = makeInstructionHandlerForSingleByte(0x8A);
+	instructionHandlers["TXS"] = makeInstructionHandlerForSingleByte(0x9A);
+	instructionHandlers["TYA"] = makeInstructionHandlerForSingleByte(0x98);
 
-    instructionHandlers["TSX"] = [&](size_t& i) {
-        assembledProgram.push_back(0xBA);
-        programSize += 1;
-        };
+	// stack instructions
+	instructionHandlers["PHA"] = makeInstructionHandlerForSingleByte(0x48);
+	instructionHandlers["PHP"] = makeInstructionHandlerForSingleByte(0x08);
+	instructionHandlers["PLA"] = makeInstructionHandlerForSingleByte(0x68);
+	instructionHandlers["PLP"] = makeInstructionHandlerForSingleByte(0x28);
 
-    instructionHandlers["TXA"] = [&](size_t& i) {
-        assembledProgram.push_back(0x8A);
-        programSize += 1;
-        };
-
-    instructionHandlers["TXS"] = [&](size_t& i) {
-        assembledProgram.push_back(0x9A);
-        programSize += 1;
-        };
-
-    instructionHandlers["TYA"] = [&](size_t& i) {
-        assembledProgram.push_back(0x98);
-        programSize += 1;
-        };
-
-    instructionHandlers["INX"] = [&](size_t& i) {
-        assembledProgram.push_back(0xE8);
-        programSize += 1;
-        };
+	// Decrement/Increment instructions
+	instructionHandlers["INX"] = makeInstructionHandlerForSingleByte(0xE8);
+	instructionHandlers["INY"] = makeInstructionHandlerForSingleByte(0xC8);
+	instructionHandlers["DEX"] = makeInstructionHandlerForSingleByte(0xCA);
+	instructionHandlers["DEY"] = makeInstructionHandlerForSingleByte(0x88);
 
     programSize = 0;
 }
@@ -182,4 +184,12 @@ assembler::InstructionHandler assembler::makeGenericHandler(const std::map<Addre
         std::string operand = inputProgram[++i];
         assembleInstructionWithOperand(operand, opcodeMap);
         };
+}
+
+// makeInstructionHandlerForSingleByte
+assembler::InstructionHandler assembler::makeInstructionHandlerForSingleByte(uint8_t opcode) {
+	return [=](size_t& i) {
+		assembledProgram.push_back(opcode);
+		programSize += 1;
+		};
 }

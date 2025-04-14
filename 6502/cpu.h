@@ -99,6 +99,12 @@ private:
 		{0x94, &cpu::STY_zeropageX},   // Zero Page,X
 		{0x8C, &cpu::STY_absolute},    // Absolute
 
+		// --- stack instructions ---
+		{0x48, &cpu::PHA},             // Push A
+		{0x08, &cpu::PHP},             // Push P
+		{0x68, &cpu::PLA},             // Pull A
+		{0x28, &cpu::PLP},             // Pull P
+
 		// --- Transfer Instructions ---
 		{0xAA, &cpu::TAX},             // Transfer A -> X
 		{0xA8, &cpu::TAY},             // Transfer A -> Y
@@ -107,7 +113,18 @@ private:
 		{0x9A, &cpu::TXS},             // Transfer X -> SP
 		{0x98, &cpu::TYA},             // Transfer Y -> A
 
-		// --- Increment Instructions ---
+		// --- Decrements / Increments ---
+		{0xE6, &cpu::DEC_zeropage},    // Decrement Zero Page
+		{0xF6, &cpu::DEC_zeropageX},   // Decrement Zero Page,X
+		{0xCE, &cpu::DEC_absolute},    // Decrement Absolute
+		{0xDE, &cpu::DEC_absoluteX},   // Decrement Absolute,X
+		{0xCA, &cpu::DEX},             // Decrement X
+		{0x88, &cpu::DEY},             // Decrement Y
+		{0xE7, &cpu::INC_zeropage},    // Increment Zero Page
+		{0xF7, &cpu::INC_zeropageX},   // Increment Zero Page,X
+		{0xCE, &cpu::INC_absolute},    // Increment Absolute
+		{0xDE, &cpu::INC_absoluteX},   // Increment Absolute,X
+		{0xC8, &cpu::INY},             // Increment Y
 		{0xE8, &cpu::INX}              // Increment X
 	};
 
@@ -156,8 +173,6 @@ private:
 	void STY_zeropageX();
 	void STY_absolute();
 
-
-
 	// transfer commands 
 	void TAX(); // A --> X
 	void TAY(); // A --> Y
@@ -166,7 +181,43 @@ private:
 	void TXS(); // X --> SP
 	void TYA(); // Y --> A
 
-	// Increment commands
+	// stack Instruction
+	void PHA(); // push A
+	void PHP(); // push P
+	void PLA(); // pull A
+	void PLP(); // pull P
+
+	// Decrements / Increments
+	void DEC_zeropage();
+	void DEC_zeropageX();
+	void DEC_absolute();
+	void DEC_absoluteX();
+
+
+	void DEX();
+	void DEY();
+
+	void INC_zeropage();
+	void INC_zeropageX();
+	void INC_absolute();
+	void INC_absoluteX();
+	
 	void INX();
+	void INY();
+
+	// flag instructionts
+	void clc();
+
+	void ADC_imediate();
+	void ADC_zeroPage();
+	void ADC_zeroPageX();
+	void ADC_absolute();
+	void ADC_absoluteX();
+	void ADC_absoluteY();
+	void ADC_indirectX();
+	void ADC_indirectY();
+
+
+
 
 };

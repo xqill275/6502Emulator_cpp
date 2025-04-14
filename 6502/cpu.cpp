@@ -436,6 +436,274 @@ void cpu::INX()
 	PC += 1;
 }
 
+void cpu::INY()
+{
+	Y += 1;
+	setFlag(ZERO, Y == 0);
+	setFlag(NEGATIVE, Y & 0x80);
+	PC += 1;
+}
+
+void cpu::clc()
+{
+	setFlag(CARRY, false);
+	PC += 1;
+}
+
+void cpu::ADC_imediate()
+{
+	uint8_t value = memory[PC + 1];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 2;
+}
+
+void cpu::ADC_zeroPage()
+{
+	uint8_t address = memory[PC + 1];
+	uint8_t value = memory[address];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 2;
+}
+
+void cpu::ADC_zeroPageX()
+{
+	uint8_t baseAddress = memory[PC + 1];
+	uint8_t effectiveAddress = static_cast<uint8_t>(baseAddress + X);
+	uint8_t value = memory[effectiveAddress];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 2;
+}
+
+void cpu::ADC_absolute()
+{
+	uint8_t low = memory[PC + 1];
+	uint8_t high = memory[PC + 2];
+	uint16_t address = (high << 8) | low;
+	uint8_t value = memory[address];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 3;
+}
+
+void cpu::ADC_absoluteX()
+{
+	uint8_t low = memory[PC + 1];
+	uint8_t high = memory[PC + 2];
+	uint16_t baseAddress = (high << 8) | low;
+	uint16_t address = baseAddress + X;
+	uint8_t value = memory[address];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 3;
+}
+
+void cpu::ADC_absoluteY()
+{
+	uint8_t low = memory[PC + 1];
+	uint8_t high = memory[PC + 2];
+	uint16_t baseAddress = (high << 8) | low;
+	uint16_t address = baseAddress + Y;
+	uint8_t value = memory[address];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 3;
+}
+
+void cpu::ADC_indirectX()
+{
+	uint8_t baseAddress = memory[PC + 1];
+	uint8_t zpAddr = static_cast<uint8_t>(baseAddress + X);  // wrap in zero page
+	uint8_t low = memory[zpAddr];
+	uint8_t high = memory[(uint8_t)(zpAddr + 1)];
+	uint16_t address = (high << 8) | low;
+	uint8_t value = memory[address];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 2;
+}
+
+void cpu::ADC_indirectY()
+{
+	uint8_t baseAddress = memory[PC + 1];
+	uint8_t low = memory[baseAddress];
+	uint8_t high = memory[(uint8_t)(baseAddress + 1)];
+	uint16_t address = (high << 8) | low;
+	uint8_t value = memory[address];
+	uint16_t result = A + value + (getFlag(CARRY) ? 1 : 0);
+	setFlag(CARRY, result > 0xFF);
+	setFlag(ZERO, (result & 0xFF) == 0);
+	setFlag(NEGATIVE, (result & 0x80) != 0);
+	setFlag(OVERFLOW_, ((A ^ result) & (value ^ result) & 0x80) != 0);
+	A = result & 0xFF;
+	PC += 2;
+}
+
+void cpu::PHA()
+{
+	SP--;
+	memory[0x0100 + SP] = A;
+	PC += 1;
+}
+
+void cpu::PHP() {
+	SP--;
+	uint8_t statusToPush = P | 0x30; // Set bits 5 (unused) and 4 (break)
+	memory[0x0100 + SP] = statusToPush;
+	PC += 1;
+}
+
+void cpu::PLA()
+{
+	SP++;
+	A = memory[0x0100 + SP];
+	setFlag(ZERO, A == 0);
+	setFlag(NEGATIVE, A & 0x80);
+	PC += 1;
+}
+
+void cpu::PLP()
+{
+	SP++;
+	P = memory[0x0100 + SP];
+	PC += 1;
+	setFlag(UNUSED, true); // Set unused bit to 1
+	setFlag(BREAK, false); // Clear break flag
+}
+
+void cpu::DEC_zeropage()
+{
+	uint8_t address = memory[PC + 1];
+	memory[address]--;
+	setFlag(ZERO, memory[address] == 0);
+	setFlag(NEGATIVE, memory[address] & 0x80);
+	PC += 2;
+}
+
+void cpu::DEC_zeropageX()
+{
+	uint8_t baseAddress = memory[PC + 1];
+	uint8_t effectiveAddress = static_cast<uint8_t>(baseAddress + X);
+	memory[effectiveAddress]--;
+	setFlag(ZERO, memory[effectiveAddress] == 0);
+	setFlag(NEGATIVE, memory[effectiveAddress] & 0x80);
+	PC += 2;
+}
+
+void cpu::DEC_absolute()
+{
+	uint8_t low = memory[PC + 1];
+	uint8_t high = memory[PC + 2];
+	uint16_t address = (high << 8) | low;
+	memory[address]--;
+	setFlag(ZERO, memory[address] == 0);
+	setFlag(NEGATIVE, memory[address] & 0x80);
+	PC += 3;
+}
+
+void cpu::DEC_absoluteX()
+{
+	uint8_t low = memory[PC + 1];
+	uint8_t high = memory[PC + 2];
+	uint16_t baseAddress = (high << 8) | low;
+	uint16_t address = baseAddress + X;
+	memory[address]--;
+	setFlag(ZERO, memory[address] == 0);
+	setFlag(NEGATIVE, memory[address] & 0x80);
+	PC += 3;
+}
+
+
+
+void cpu::DEX()
+{
+	X--;
+	setFlag(ZERO, X == 0);
+	setFlag(NEGATIVE, X & 0x80);
+	PC += 1;
+}
+
+void cpu::DEY()
+{
+	Y--;
+	setFlag(ZERO, Y == 0);
+	setFlag(NEGATIVE, Y & 0x80);
+	PC += 1;
+}
+
+void cpu::INC_zeropage()
+{
+	uint8_t address = memory[PC + 1];
+	memory[address]++;
+	setFlag(ZERO, memory[address] == 0);
+	setFlag(NEGATIVE, memory[address] & 0x80);
+	PC += 2;
+}
+
+void cpu::INC_zeropageX()
+{
+	uint8_t baseAddress = memory[PC + 1];
+	uint8_t effectiveAddress = static_cast<uint8_t>(baseAddress + X);
+	memory[effectiveAddress]++;
+	setFlag(ZERO, memory[effectiveAddress] == 0);
+	setFlag(NEGATIVE, memory[effectiveAddress] & 0x80);
+	PC += 2;
+}
+
+void cpu::INC_absolute()
+{
+	uint8_t low = memory[PC + 1];
+	uint8_t high = memory[PC + 2];
+	uint16_t address = (high << 8) | low;
+	memory[address]++;
+	setFlag(ZERO, memory[address] == 0);
+	setFlag(NEGATIVE, memory[address] & 0x80);
+	PC += 3;
+}
+
+void cpu::INC_absoluteX()
+{
+	uint8_t low = memory[PC + 1];
+	uint8_t high = memory[PC + 2];
+	uint16_t baseAddress = (high << 8) | low;
+	uint16_t address = baseAddress + X;
+	memory[address]++;
+	setFlag(ZERO, memory[address] == 0);
+	setFlag(NEGATIVE, memory[address] & 0x80);
+	PC += 3;
+}
+
+
 uint16_t cpu::getPC()
 {
 	return PC;
